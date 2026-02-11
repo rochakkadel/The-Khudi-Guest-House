@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Khudi Guest House</title>
+    <title> The Khudi Guest House</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -70,8 +70,8 @@
             </div>
             <div>
                 <!-- Much Larger Heading with Loop Animation -->
-                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight gold-glow-loop leading-tight">Khudi Guest House</h1>
-                <p class="text-sm text-neutral-400 font-bold">Khudi Okhara, Nepal</p>
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight gold-glow-loop leading-tight">The Khudi Guest House</h1>
+                <p class="text-sm text-neutral-400 font-bold">Khudi Dhungepatan, Pokhara</p>
             </div>
         </div>
         
@@ -92,20 +92,22 @@
     <!-- Main Content -->
     <main class="flex-1 p-4 overflow-y-auto pb-20">
         <!-- Colorful Chips with Animation -->
-        <div class="flex flex-wrap gap-3 mb-8">
-            <span class="chip px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-blue-900/40 text-blue-300 border border-blue-500/30 cursor-pointer select-none">
-                <i class="fas fa-bath"></i> Attached Bath
-            </span>
-            <span class="chip px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-violet-900/40 text-violet-300 border border-violet-500/30 cursor-pointer select-none">
-                <i class="fas fa-wifi"></i> Free WiFi
-            </span>
-            <span class="chip px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 cursor-pointer select-none">
-                <i class="fas fa-wind"></i> Ventilated
-            </span>
-            <span class="chip px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-orange-900/40 text-orange-300 border border-orange-500/30 cursor-pointer select-none">
-                <i class="fas fa-couch"></i> Furnished
-            </span>
-        </div>
+<div class="flex flex-wrap gap-3 mb-8">
+    <span class="chip px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-blue-900/40 text-blue-300 border border-blue-500/30 cursor-pointer select-none">
+        <i class="fas fa-bath"></i> Bath
+    </span>
+    <span class="chip px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-cyan-900/40 text-cyan-300 border border-cyan-500/30 cursor-pointer select-none">
+        <i class="fas fa-wifi"></i> Free WiFi
+    </span>
+    <span class="chip px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-amber-900/40 text-amber-300 border border-amber-500/30 cursor-pointer select-none">
+        <i class="fas fa-couch"></i> Furnished
+    </span>
+    <span class="chip px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 cursor-pointer select-none">
+        <i class="fas fa-wind"></i> Ventilated
+    </span>
+    
+</div>
+
         
         <div id="roomList" class="space-y-6">
             <div class="text-center text-neutral-500 py-10 text-lg">Loading Rooms...</div>
@@ -136,7 +138,7 @@
                     <div class="flex flex-wrap gap-2 mt-3" id="detailTags"></div>
                 </div>
                 <div class="text-right">
-                    <div class="text-2xl font-bold text-yellow-400">NPR <span id="detailPrice">0</span></div>
+                    <div class="text-2xl font-bold text-yellow-400">₹ <span id="detailPrice">0</span></div>
                     <span id="detailStatus" class="text-sm border px-3 py-1 rounded uppercase font-bold tracking-wider mt-1 inline-block">Open</span>
                 </div>
             </div>
@@ -148,11 +150,11 @@
             <!-- Actions -->
             <div class="grid grid-cols-1 gap-4 mt-8 pt-4 border-t border-neutral-800">
                 <button onclick="window.openBookingForm()" id="applyBtn" class="w-full bg-white text-black font-extrabold py-4 rounded-xl hover:bg-neutral-200 transition flex items-center justify-center gap-3 text-lg">
-                    <i class="fas fa-paper-plane"></i> Apply to Book
+                    <i class="fas fa-paper-plane"></i> Apply
                 </button>
                 <!-- Call Button -->
                 <a href="tel:9846027958" class="w-full bg-white text-black font-extrabold py-4 rounded-xl hover:bg-neutral-200 transition flex items-center justify-center gap-3 decoration-0 text-lg">
-                    <i class="fas fa-phone"></i> Call: 984-6027958
+                    <i class="fas fa-phone"></i> Call: (984)602-7958
                 </a>
             </div>
 
@@ -381,7 +383,7 @@
                 <div class="p-5 flex justify-between items-center">
                     <div>
                         <span class="text-sm text-neutral-400 block font-bold">Price per night</span>
-                        <span class="text-yellow-400 font-extrabold text-xl">NPR ${room.price}</span>
+                        <span class="text-yellow-400 font-extrabold text-xl">₹ ${room.price}</span>
                     </div>
                     <span class="text-sm border px-3 py-1 rounded font-bold uppercase tracking-wide ${statusClass}">${room.status}</span>
                 </div>
@@ -402,7 +404,7 @@
             headerBadge.innerText = unread;
             unread > 0 ? headerBadge.classList.remove('hidden') : headerBadge.classList.add('hidden');
         } else {
-            adminBtn.innerText = "Admin Login";
+            adminBtn.innerText = "-";
             headerInbox.classList.add('hidden');
             logoEditBtn.classList.add('hidden');
         }
@@ -427,7 +429,7 @@
         } else {
             applyBtn.disabled = false;
             applyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            applyBtn.innerHTML = '<i class="fas fa-paper-plane mb-1"></i> Apply to Book';
+            applyBtn.innerHTML = '<i class="fas fa-paper-plane mb-1"></i> Apply';
         }
 
         const tagsContainer = document.getElementById('detailTags');
