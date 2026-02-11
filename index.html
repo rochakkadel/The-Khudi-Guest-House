@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Khudi Guest House</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        body { background-color: #000; color: #fff; font-family: -apple-system, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+        .glass-panel { background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .chip { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .app-container { max-width: 600px; margin: 0 auto; min-height: 100vh; background-color: #050505; position: relative; }
+        .modal { transition: 0.2s ease; opacity: 0; pointer-events: none; transform: scale(0.95); }
+        .modal.active { opacity: 1; pointer-events: auto; transform: scale(1); }
+        .status-open { color: #4ade80; border-color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+        .status-booked { color: #f87171; border-color: #f87171; background: rgba(248, 113, 113, 0.1); }
+        .dropdown-menu { animation: fadeIn 0.1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+<div class="app-container flex flex-col">
+    <!-- Header -->
+    <header class="sticky top-0 z-40 glass-panel p-4 flex justify-between items-center border-b border-neutral-800">
+        <div class="flex items-center gap-3">
+            <img src="https://placehold.co/100x100/333/FFF?text=KG" alt="Logo" class="w-10 h-10 rounded-full border border-neutral-700 bg-neutral-800">
+            <div>
+                <h1 class="text-xl font-bold tracking-tight">Khudi Guest House</h1>
+                <p class="text-xs text-neutral-400">Khudi Okhara, Nepal</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <!-- Admin Inbox -->
+            <button id="headerInboxBtn" onclick="window.openAdminInbox()" class="hidden relative w-8 h-8 flex items-center justify-center bg-neutral-800 rounded-full text-white hover:bg-neutral-700 transition">
+                <i class="fas fa-envelope"></i>
+                <span id="headerUnreadCount" class="absolute -top-1 -right-1 bg-red-600 text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold hidden">0</span>
+            </button>
+
+            <!-- Admin Toggle -->
+            <button id="adminToggleBtn" onclick="window.toggleAdminLogin()" class="text-xs border border-white/20 px-3 py-1 rounded-full hover:bg-white hover:text-black transition">
+                Admin
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 overflow-y-auto pb-20">
+        <div class="flex flex-wrap gap-2 mb-6">
+            <span class="chip px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"><i class="fas fa-bath text-neutral-400"></i> Attached Bathroom</span>
+            <span class="chip px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"><i class="fas fa-wifi text-neutral-400"></i> Free WiFi</span>
+            <span class="chip px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"><i class="fas fa-wind text-neutral-400"></i> Ventilated</span>
+        </div>
+        <div id="roomList" class="space-y-4">
+            <div class="text-center text-neutral-500 py-10">Loading Rooms...</div>
+        </div>
+    </main>
+</div>
+
+<!-- Detail Modal -->
+<div id="detailModal" class="modal fixed inset-0 z-50 flex flex-col bg-black text-white app-container mx-auto">
+    <div class="p-4 flex justify-between items-center glass-panel z-10">
+        <button onclick="window.closeDetailModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-neutral-700"><i class="fas fa-arrow-left"></i></button>
+        <span class="font-bold" id="detailTitle">Room Name</span>
+        <div class="w-8"></div>
+    </div>
+    <div class="flex-1 overflow-y-auto pb-32">
+        <div class="h-64 bg-neutral-900 relative">
+            <img id="detailMainImage" src="" class="w-full h-full object-cover">
+        </div>
+        <div class="p-5 space-y-4">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="text-2xl font-bold mb-1" id="detailName">Room 1</h2>
+                    <div class="flex flex-wrap gap-2 mt-2" id="detailTags"></div>
+                </div>
+                <div class="text-right">
+                    <div class="text-xl font-bold">NPR <span id="detailPrice">0</span></div>
+                    <span id="detailStatus" class="text-xs border px-2 py-0.5 rounded uppercase font-bold tracking-wider">Open</span>
+                </div>
+            </div>
+            <div class="h-px bg-neutral-800 my-4"></div>
+            <p class="text-neutral-300 text-sm leading-relaxed" id="detailDesc"></p>
+
+            <!-- Admin Controls (Detail View) -->
+            <div id="adminDetailControls" class="hidden mt-6 p-4 border border-dashed border-neutral-700 rounded-lg bg-neutral-900/50">
+                <h3 class="text-xs text-neutral-400 mb-3 uppercase tracking-wider font-bold">Admin Controls</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="window.adminEditPriceDetail()" class="bg-neutral-800 py-3 rounded text-sm hover:bg-neutral-700 font-medium border border-neutral-700">Edit Price</button>
+                    <button onclick="window.adminEditTags()" class="bg-neutral-800 py-3 rounded text-sm hover:bg-neutral-700 font-medium border border-neutral-700">Edit Tags</button>
+                    <button onclick="window.adminEditNotes()" class="bg-neutral-800 py-3 rounded text-sm hover:bg-neutral-700 font-medium col-span-2 border border-neutral-700">Edit Notes</button>
+                    <button onclick="window.adminSetStatus('Open')" class="bg-green-900/20 text-green-400 border border-green-900/50 py-3 rounded text-sm font-medium">Set Open</button>
+                    <button onclick="window.adminSetStatus('Booked')" class="bg-red-900/20 text-red-400 border border-red-900/50 py-3 rounded text-sm font-medium">Set Booked</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="absolute bottom-0 left-0 right-0 p-4 glass-panel border-t border-neutral-800">
+        <div class="grid grid-cols-2 gap-3">
+            <button onclick="window.showPhonePreview()" class="flex flex-col items-center justify-center bg-neutral-800 hover:bg-neutral-700 text-white py-3 rounded-lg transition">
+                <i class="fas fa-phone mb-1"></i>
+                <span class="text-xs font-medium">Call</span>
+            </button>
+            <button onclick="window.openBookingForm()" id="applyBtn" class="flex flex-col items-center justify-center bg-white text-black hover:bg-neutral-200 py-3 rounded-lg transition font-bold">
+                <i class="fas fa-paper-plane mb-1"></i>
+                <span class="text-xs">Apply to Book</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Phone Preview Modal -->
+<div id="phoneModal" class="modal fixed inset-0 z-[80] flex items-center justify-center bg-black/90 p-4">
+    <div class="bg-neutral-900 border border-neutral-700 w-full max-w-xs rounded-xl p-6 text-center">
+        <div class="w-16 h-16 bg-green-900/30 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+            <i class="fas fa-phone"></i>
+        </div>
+        <h3 class="text-lg font-bold mb-2">Contact Us</h3>
+        <p class="text-xl font-mono mb-6 text-white tracking-wider">984-6027958</p>
+        <div class="flex gap-3">
+            <button onclick="document.getElementById('phoneModal').classList.remove('active')" class="flex-1 bg-neutral-800 py-2 rounded text-sm hover:bg-neutral-700">Cancel</button>
+            <a href="tel:9846027958" class="flex-1 bg-white text-black font-bold py-2 rounded text-sm flex items-center justify-center hover:bg-neutral-200">Call Now</a>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div id="bookingModal" class="modal fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4">
+    <div class="bg-neutral-900 border border-neutral-700 w-full max-w-sm rounded-xl p-6 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold">Booking Request</h3>
+            <button onclick="window.closeBookingModal()" class="text-neutral-400 hover:text-white"><i class="fas fa-times"></i></button>
+        </div>
+        <form onsubmit="window.submitBooking(event)" class="space-y-4">
+            <input type="text" id="guestName" placeholder="Full Name" required class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none">
+            <div class="grid grid-cols-2 gap-4">
+                <input type="tel" id="guestPhone" placeholder="Phone" required class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none">
+                <input type="number" id="guestStay" placeholder="Nights" min="1" value="1" required class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none">
+            </div>
+            <button type="submit" class="w-full bg-white text-black font-bold py-3 rounded mt-2 hover:bg-neutral-200 transition">Submit Request</button>
+        </form>
+    </div>
+</div>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal fixed inset-0 z-[70] flex items-center justify-center bg-black/95 p-4">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs rounded-xl p-6">
+        <h3 class="text-center font-bold mb-6 text-xl">Admin Access</h3>
+        <form onsubmit="window.handleAdminLogin(event)" class="space-y-4">
+            <input type="text" id="adminUser" placeholder="Username" class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none">
+            <input type="password" id="adminPass" placeholder="Password" class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none">
+            <div class="flex gap-2">
+                <button type="button" onclick="window.closeLoginModal()" class="flex-1 bg-neutral-800 py-2 rounded text-sm text-neutral-400">Cancel</button>
+                <button type="submit" class="flex-1 bg-white text-black font-bold py-2 rounded text-sm">Login</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Admin Inbox Modal -->
+<div id="inboxModal" class="modal fixed inset-0 z-[60] flex flex-col bg-neutral-900 app-container mx-auto">
+    <div class="p-4 flex justify-between items-center border-b border-neutral-800 bg-black">
+        <h2 class="font-bold text-lg"><i class="fas fa-inbox mr-2"></i>Booking Requests</h2>
+        <button onclick="window.closeAdminInbox()" class="text-neutral-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+    </div>
+    <div id="inboxList" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+</div>
+
+<!-- Generic Input Modal (Replaces Prompt) -->
+<div id="inputModal" class="modal fixed inset-0 z-[90] flex items-center justify-center bg-black/90 p-4">
+    <div class="bg-neutral-900 border border-neutral-700 w-full max-w-xs rounded-xl p-6">
+        <h3 id="inputModalTitle" class="text-lg font-bold mb-4">Edit Value</h3>
+        <input type="text" id="inputModalField" class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none mb-4" autocomplete="off">
+        <div class="flex gap-2">
+            <button onclick="window.closeInputModal()" class="flex-1 bg-neutral-800 py-2 rounded text-sm text-neutral-400">Cancel</button>
+            <button id="inputModalConfirm" class="flex-1 bg-white text-black font-bold py-2 rounded text-sm">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Message Modal (Replaces Alert) -->
+<div id="msgModal" class="modal fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-6">
+    <div class="bg-neutral-900 border border-neutral-700 rounded-lg p-5 max-w-xs w-full text-center shadow-2xl">
+        <p id="msgModalText" class="text-sm font-medium mb-4">Message</p>
+        <button onclick="document.getElementById('msgModal').classList.remove('active')" class="bg-white text-black px-6 py-2 rounded text-sm font-bold w-full">OK</button>
+    </div>
+</div>
+
+<!-- SCRIPT -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, updateDoc, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // --- CONFIG ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBi3p1DKXgT3RN-GnHG5_HRjmCKHaFljsY",
+        authDomain: "guest-house-d8a3b.firebaseapp.com",
+        projectId: "guest-house-d8a3b",
+        storageBucket: "guest-house-d8a3b.firebasestorage.app",
+        messagingSenderId: "772323630307",
+        appId: "1:772323630307:web:175cefd0f7630289da39d6",
+        measurementId: "G-ET1VBPLD61"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // --- GLOBAL STATE ---
+    window.currentRoomId = null; 
+    window.isAdmin = false;
+    window.roomsData = [];
+    window.pendingCallback = null; // For modal callbacks
+
+    // --- HELPER UI ---
+    window.showToast = (msg) => {
+        document.getElementById('msgModalText').innerText = msg;
+        document.getElementById('msgModal').classList.add('active');
+    };
+
+    window.showInput = (title, val, callback) => {
+        document.getElementById('inputModalTitle').innerText = title;
+        const field = document.getElementById('inputModalField');
+        field.value = val;
+        
+        // Remove old listener to prevent stacking
+        const confirmBtn = document.getElementById('inputModalConfirm');
+        const newBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+
+        newBtn.onclick = () => {
+            const newVal = document.getElementById('inputModalField').value;
+            if(newVal !== null) callback(newVal);
+            window.closeInputModal();
+        };
+
+        document.getElementById('inputModal').classList.add('active');
+        field.focus();
+    };
+
+    window.closeInputModal = () => document.getElementById('inputModal').classList.remove('active');
+
+    // --- INIT ---
+    signInAnonymously(auth).then(() => {
+        console.log("DB Connected");
+        initListeners();
+    }).catch(err => console.error("DB Error", err));
+
+    function initListeners() {
+        onSnapshot(collection(db, 'rooms'), (snapshot) => {
+            if (snapshot.empty) seedRooms();
+            else {
+                const rooms = [];
+                snapshot.forEach(d => rooms.push(d.data()));
+                rooms.sort((a, b) => a.id - b.id);
+                window.roomsData = rooms; 
+                renderApp(rooms);
+                if(window.currentRoomId && document.getElementById('detailModal').classList.contains('active')) {
+                    const r = rooms.find(i => i.id === window.currentRoomId);
+                    if(r) updateDetailView(r);
+                }
+            }
+        });
+
+        onSnapshot(collection(db, 'bookings'), (snapshot) => {
+            const bookings = [];
+            snapshot.forEach(d => bookings.push({ ...d.data(), firestoreId: d.id }));
+            bookings.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            window.bookingsData = bookings;
+            renderApp(window.roomsData);
+        });
+    }
+
+    // --- RENDER ---
+    function renderApp(rooms) {
+        const list = document.getElementById('roomList');
+        if(!list) return;
+        list.innerHTML = '';
+        
+        rooms.forEach(room => {
+            const card = document.createElement('div');
+            card.className = 'group relative bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden hover:border-neutral-600 transition cursor-pointer';
+            
+            card.onclick = (e) => {
+                if(e.target.closest('.admin-menu-btn') || e.target.closest('.admin-dropdown')) return;
+                window.openDetail(room.id);
+            };
+
+            const statusClass = room.status === 'Open' ? 'status-open' : 'status-booked';
+            const displayImage = (room.images && room.images.length > 0) ? room.images[0] : 'https://placehold.co/600x400/222/FFF?text=No+Image';
+
+            let adminControls = '';
+            if (window.isAdmin) {
+                adminControls = `
+                    <div class="absolute top-2 right-2 z-20">
+                        <button onclick="window.toggleCardMenu(event, ${room.id})" class="admin-menu-btn w-8 h-8 bg-black/80 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div id="menu-${room.id}" class="admin-dropdown hidden absolute right-0 mt-2 w-40 bg-neutral-800 border border-neutral-700 shadow-xl rounded-lg overflow-hidden z-30 dropdown-menu">
+                            <button onclick="event.stopPropagation(); window.quickSetStatus(${room.id}, 'Open')" class="block w-full text-left px-4 py-3 text-xs hover:bg-neutral-700 text-green-400 font-bold border-b border-neutral-700">Set Open</button>
+                            <button onclick="event.stopPropagation(); window.quickSetStatus(${room.id}, 'Booked')" class="block w-full text-left px-4 py-3 text-xs hover:bg-neutral-700 text-red-400 font-bold border-b border-neutral-700">Set Booked</button>
+                            <button onclick="event.stopPropagation(); window.quickEditPrice(${room.id})" class="block w-full text-left px-4 py-3 text-xs hover:bg-neutral-700 text-white">Edit Price</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <div class="h-40 overflow-hidden relative">
+                    <img src="${displayImage}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                    <div class="absolute bottom-3 left-3">
+                        <h3 class="text-lg font-bold">${room.name}</h3>
+                    </div>
+                    ${adminControls}
+                </div>
+                <div class="p-4 flex justify-between items-center">
+                    <div>
+                        <span class="text-xs text-neutral-400 block">Price per night</span>
+                        <span class="text-white font-bold text-lg">NPR ${room.price}</span>
+                    </div>
+                    <span class="text-xs border px-2 py-1 rounded font-bold uppercase tracking-wide ${statusClass}">${room.status}</span>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+
+        const adminBtn = document.getElementById('adminToggleBtn');
+        const headerInbox = document.getElementById('headerInboxBtn');
+        const headerBadge = document.getElementById('headerUnreadCount');
+        
+        if (window.isAdmin) {
+            adminBtn.innerText = "Logout";
+            headerInbox.classList.remove('hidden');
+            const unread = (window.bookingsData || []).filter(b => !b.read).length;
+            headerBadge.innerText = unread;
+            unread > 0 ? headerBadge.classList.remove('hidden') : headerBadge.classList.add('hidden');
+        } else {
+            adminBtn.innerText = "Admin Login";
+            headerInbox.classList.add('hidden');
+        }
+    }
+
+    function updateDetailView(room) {
+        document.getElementById('detailName').innerText = room.name;
+        document.getElementById('detailTitle').innerText = room.name;
+        document.getElementById('detailPrice').innerText = room.price;
+        document.getElementById('detailMainImage').src = (room.images && room.images.length > 0) ? room.images[0] : '';
+        document.getElementById('detailDesc').innerText = room.description || "No description available.";
+        
+        const statusEl = document.getElementById('detailStatus');
+        statusEl.innerText = room.status;
+        statusEl.className = room.status === 'Open' ? 'text-xs border px-2 py-1 rounded uppercase font-bold tracking-wider status-open' : 'text-xs border px-2 py-1 rounded uppercase font-bold tracking-wider status-booked';
+
+        const applyBtn = document.getElementById('applyBtn');
+        if (room.status === 'Booked') {
+            applyBtn.disabled = true;
+            applyBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            applyBtn.innerHTML = '<span class="text-xs">Unavailable</span>';
+        } else {
+            applyBtn.disabled = false;
+            applyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            applyBtn.innerHTML = '<i class="fas fa-paper-plane mb-1"></i><span class="text-xs">Apply to Book</span>';
+        }
+
+        const tagsContainer = document.getElementById('detailTags');
+        tagsContainer.innerHTML = '';
+        if(room.tags) room.tags.forEach(tag => {
+            const span = document.createElement('span');
+            span.className = "text-xs bg-neutral-800 text-neutral-300 px-2 py-1 rounded";
+            span.innerText = tag;
+            tagsContainer.appendChild(span);
+        });
+
+        const adminControls = document.getElementById('adminDetailControls');
+        window.isAdmin ? adminControls.classList.remove('hidden') : adminControls.classList.add('hidden');
+    }
+
+    // --- GLOBAL ACTIONS ---
+
+    window.openDetail = (roomId) => {
+        window.currentRoomId = roomId; 
+        const room = window.roomsData.find(r => r.id === roomId);
+        if(room) {
+            updateDetailView(room);
+            document.getElementById('detailModal').classList.add('active');
+        }
+    };
+    window.closeDetailModal = () => document.getElementById('detailModal').classList.remove('active');
+    
+    // Booking
+    window.openBookingForm = () => { if(!document.getElementById('applyBtn').disabled) document.getElementById('bookingModal').classList.add('active'); };
+    window.closeBookingModal = () => document.getElementById('bookingModal').classList.remove('active');
+    
+    // Phone
+    window.showPhonePreview = () => document.getElementById('phoneModal').classList.add('active');
+
+    // Auth
+    window.toggleAdminLogin = () => {
+        if (window.isAdmin) {
+            window.isAdmin = false;
+            renderApp(window.roomsData);
+        } else {
+            document.getElementById('loginModal').classList.add('active');
+        }
+    };
+    window.closeLoginModal = () => document.getElementById('loginModal').classList.remove('active');
+    window.handleAdminLogin = (e) => {
+        e.preventDefault();
+        const u = document.getElementById('adminUser').value;
+        const p = document.getElementById('adminPass').value;
+        if (u === 'rochakkadel' && p === 'baburamkadel') {
+            window.isAdmin = true;
+            window.closeLoginModal();
+            renderApp(window.roomsData);
+            if(window.currentRoomId) {
+                 const r = window.roomsData.find(i => i.id === window.currentRoomId);
+                 if(r) updateDetailView(r);
+            }
+        } else {
+            window.showToast('Invalid credentials');
+        }
+    };
+
+    // UI Toggles
+    window.toggleCardMenu = (e, id) => {
+        e.stopPropagation(); 
+        document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.add('hidden'));
+        document.getElementById(`menu-${id}`).classList.remove('hidden');
+    };
+    document.addEventListener('click', (e) => {
+        if(!e.target.closest('.admin-menu-btn')) document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.add('hidden'));
+    });
+
+    // DB Updates Wrapper
+    async function updateRoom(id, data) {
+        try {
+            await setDoc(doc(db, 'rooms', `room_${id}`), data, { merge: true });
+            document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.add('hidden'));
+        } catch(e) { console.error(e); window.showToast("Update failed. See console."); }
+    }
+
+    // --- ACTIONS USING NEW MODAL ---
+    window.quickSetStatus = (id, s) => updateRoom(id, { status: s });
+    
+    window.quickEditPrice = (id) => {
+        window.showInput("New Price (NPR)", "", (val) => {
+             if(val && !isNaN(val)) updateRoom(id, { price: parseInt(val) });
+        });
+    };
+
+    window.adminEditPriceDetail = () => { 
+        if(!window.currentRoomId) return window.showToast("Error: No room");
+        const r = window.roomsData.find(i => i.id === window.currentRoomId);
+        window.showInput("Edit Price", r ? r.price : "", (val) => {
+            if(val && !isNaN(val)) updateRoom(window.currentRoomId, { price: parseInt(val) });
+        });
+    };
+
+    window.adminSetStatus = (s) => { 
+        if(!window.currentRoomId) return window.showToast("Error: No room");
+        updateRoom(window.currentRoomId, { status: s }); 
+    };
+
+    window.adminEditNotes = () => {
+        if(!window.currentRoomId) return window.showToast("Error: No room");
+        const r = window.roomsData.find(i => i.id === window.currentRoomId);
+        window.showInput("Edit Description", r ? r.description : "", (val) => {
+            updateRoom(window.currentRoomId, { description: val });
+        });
+    };
+
+    window.adminEditTags = () => {
+        if(!window.currentRoomId) return window.showToast("Error: No room");
+        const r = window.roomsData.find(i => i.id === window.currentRoomId);
+        const oldTags = (r && r.tags) ? r.tags.join(', ') : "";
+        window.showInput("Tags (comma separated)", oldTags, (val) => {
+            const newTags = val.split(',').map(s=>s.trim()).filter(s=>s);
+            updateRoom(window.currentRoomId, { tags: newTags });
+        });
+    };
+
+    // Booking Submit
+    window.submitBooking = async (e) => {
+        e.preventDefault();
+        const r = window.roomsData.find(i => i.id === window.currentRoomId);
+        try {
+            await addDoc(collection(db, 'bookings'), {
+                roomId: r.id,
+                roomName: r.name,
+                guestName: document.getElementById('guestName').value,
+                guestPhone: document.getElementById('guestPhone').value,
+                nights: document.getElementById('guestStay').value,
+                timestamp: new Date().toISOString(),
+                read: false
+            });
+            window.closeBookingModal();
+            window.closeDetailModal();
+            window.showToast("Booking Sent!");
+        } catch(e) { console.error(e); window.showToast("Error sending booking."); }
+    };
+
+    // Inbox
+    window.openAdminInbox = () => {
+        const list = document.getElementById('inboxList');
+        list.innerHTML = '';
+        const bookings = window.bookingsData || [];
+        
+        if (bookings.length === 0) list.innerHTML = '<div class="text-neutral-500 text-center mt-10">No requests.</div>';
+        
+        bookings.forEach(b => {
+            const el = document.createElement('div');
+            el.className = `p-4 rounded border ${b.read ? 'bg-black border-neutral-800' : 'bg-neutral-900 border-l-4 border-l-white border-y-neutral-800 border-r-neutral-800'}`;
+            el.innerHTML = `
+                <div class="flex justify-between font-bold"><span>${b.guestName}</span><span class="text-xs text-neutral-500 font-normal">${new Date(b.timestamp).toLocaleDateString()}</span></div>
+                <div class="text-sm text-neutral-400 mt-1">${b.roomName} • ${b.nights} Nights</div>
+                <div class="mt-2 flex justify-between items-center bg-neutral-800 p-2 rounded">
+                    <span class="font-mono text-sm">${b.guestPhone}</span>
+                    <a href="tel:${b.guestPhone}" class="text-xs bg-white text-black px-2 py-1 rounded font-bold">Call</a>
+                </div>`;
+            if(!b.read) updateDoc(doc(db, 'bookings', b.firestoreId), { read: true });
+            list.appendChild(el);
+        });
+        document.getElementById('inboxModal').classList.add('active');
+    };
+    window.closeAdminInbox = () => document.getElementById('inboxModal').classList.remove('active');
+
+    // --- SEEDER ---
+    async function seedRooms() {
+        console.log("Seeding...");
+        const defaults = [
+            { id: 1, name: "Room 1", price: 1500, status: "Open", tags: ["Attached Bath", "WiFi"], description: "Double bed, street view, 2nd floor.", images: ["https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&w=800&q=80"] },
+            { id: 2, name: "Room 2", price: 1500, status: "Open", tags: ["Attached Bath", "WiFi", "Balcony"], description: "Clean, ventilated room.", images: ["https://images.unsplash.com/photo-1590490360182-f33efe80a713?ixlib=rb-4.0.3&w=800&q=80"] },
+            { id: 3, name: "Room 3", price: 1500, status: "Open", tags: ["Attached Bath", "WiFi"], description: "Quiet room facing garden.", images: ["https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-4.0.3&w=800&q=80"] },
+            { id: 4, name: "Room 4", price: 1200, status: "Open", tags: ["Common Bath", "WiFi"], description: "Budget friendly option.", images: ["https://images.unsplash.com/photo-1505693314120-0d443867891c?ixlib=rb-4.0.3&w=800&q=80"] },
+            { id: 5, name: "Room 5", price: 1500, status: "Open", tags: ["Attached Bath", "WiFi"], description: "Standard double room.", images: ["https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?ixlib=rb-4.0.3&w=800&q=80"] },
+            { id: 6, name: "Room 6", price: 1800, status: "Open", tags: ["Attached Bath", "WiFi", "AC"], description: "Premium room with AC.", images: ["https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&w=800&q=80"] }
+        ];
+        for (const r of defaults) {
+            await setDoc(doc(db, 'rooms', `room_${r.id}`), r);
+        }
+    }
+</script>
+</body>
+</html>
