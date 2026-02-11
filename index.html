@@ -11,7 +11,16 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #000; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-        body { background-color: #000; color: #fff; font-family: -apple-system, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+        
+        /* Enforce Monospace and Bold globally */
+        body { 
+            background-color: #000; 
+            color: #fff; 
+            font-family: 'Courier New', Courier, monospace; 
+            font-weight: bold; 
+            -webkit-font-smoothing: antialiased; 
+        }
+
         .glass-panel { background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .chip { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); }
         .app-container { max-width: 600px; margin: 0 auto; min-height: 100vh; background-color: #050505; position: relative; }
@@ -20,6 +29,21 @@
         .status-open { color: #4ade80; border-color: #4ade80; background: rgba(74, 222, 128, 0.1); }
         .status-booked { color: #f87171; border-color: #f87171; background: rgba(248, 113, 113, 0.1); }
         .dropdown-menu { animation: fadeIn 0.1s ease-out; }
+        
+        /* Golden Glow Effect */
+        .gold-glow {
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        /* Global Micro-Animations */
+        button, a, .group, .chip {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        button:active, a:active, .group:active {
+            transform: scale(0.96);
+        }
+
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
@@ -36,7 +60,7 @@
                 </button>
             </div>
             <div>
-                <h1 class="text-xl font-bold tracking-tight">Khudi Guest House</h1>
+                <h1 class="text-xl font-bold tracking-tight gold-glow">Khudi Guest House</h1>
                 <p class="text-xs text-neutral-400">Khudi Okhara, Nepal</p>
             </div>
         </div>
@@ -58,9 +82,9 @@
     <!-- Main Content -->
     <main class="flex-1 p-4 overflow-y-auto pb-20">
         <div class="flex flex-wrap gap-2 mb-6">
-            <span class="chip px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"><i class="fas fa-bath text-neutral-400"></i> Attached Bathroom</span>
-            <span class="chip px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"><i class="fas fa-wifi text-neutral-400"></i> Free WiFi</span>
-            <span class="chip px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"><i class="fas fa-wind text-neutral-400"></i> Ventilated</span>
+            <span class="chip px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 cursor-default hover:bg-neutral-800"><i class="fas fa-bath text-neutral-400"></i> Attached Bathroom</span>
+            <span class="chip px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 cursor-default hover:bg-neutral-800"><i class="fas fa-wifi text-neutral-400"></i> Free WiFi</span>
+            <span class="chip px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 cursor-default hover:bg-neutral-800"><i class="fas fa-wind text-neutral-400"></i> Ventilated</span>
         </div>
         <div id="roomList" class="space-y-4">
             <div class="text-center text-neutral-500 py-10">Loading Rooms...</div>
@@ -71,12 +95,15 @@
 <!-- Detail Modal -->
 <div id="detailModal" class="modal fixed inset-0 z-50 flex flex-col bg-black text-white app-container mx-auto">
     <div class="p-4 flex justify-between items-center glass-panel z-10 border-b border-neutral-800">
-        <button onclick="window.closeDetailModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-neutral-700"><i class="fas fa-arrow-left"></i></button>
-        <span class="font-bold" id="detailTitle">Room Name</span>
-        <div class="w-8"></div>
+        <!-- Blue, easily seen Back Button -->
+        <button onclick="window.closeDetailModal()" class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.6)] border border-blue-400 transform hover:scale-105 active:scale-95 transition-all">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <span class="font-bold text-lg" id="detailTitle">Room Name</span>
+        <div class="w-10"></div>
     </div>
     <div class="flex-1 overflow-y-auto pb-10">
-        <!-- Main Image Container: Changed to aspect-square -->
+        <!-- Main Image Container: Aspect Square -->
         <div class="aspect-square w-full bg-neutral-900 relative">
             <img id="detailMainImage" src="" class="w-full h-full object-cover">
         </div>
@@ -88,7 +115,7 @@
                     <div class="flex flex-wrap gap-2 mt-2" id="detailTags"></div>
                 </div>
                 <div class="text-right">
-                    <div class="text-xl font-bold">NPR <span id="detailPrice">0</span></div>
+                    <div class="text-xl font-bold text-yellow-400">NPR <span id="detailPrice">0</span></div>
                     <span id="detailStatus" class="text-xs border px-2 py-0.5 rounded uppercase font-bold tracking-wider">Open</span>
                 </div>
             </div>
@@ -102,7 +129,7 @@
                 <button onclick="window.openBookingForm()" id="applyBtn" class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-neutral-200 transition flex items-center justify-center gap-2">
                     <i class="fas fa-paper-plane"></i> Apply to Book
                 </button>
-                <!-- Updated Call Button -->
+                <!-- Call Button -->
                 <a href="tel:9846027958" class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-neutral-200 transition flex items-center justify-center gap-2 decoration-0">
                     <i class="fas fa-phone"></i> Call: 984-6027958
                 </a>
@@ -132,10 +159,10 @@
             <button onclick="window.closeBookingModal()" class="text-neutral-400 hover:text-white"><i class="fas fa-times"></i></button>
         </div>
         <form onsubmit="window.submitBooking(event)" class="space-y-4">
-            <input type="text" id="guestName" placeholder="Full Name" required class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none">
+            <input type="text" id="guestName" placeholder="Full Name" required class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none font-bold">
             <div class="grid grid-cols-2 gap-4">
-                <input type="tel" id="guestPhone" placeholder="Phone" required class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none">
-                <input type="number" id="guestStay" placeholder="Nights" min="1" value="1" required class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none">
+                <input type="tel" id="guestPhone" placeholder="Phone" required class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none font-bold">
+                <input type="number" id="guestStay" placeholder="Nights" min="1" value="1" required class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none font-bold">
             </div>
             <button type="submit" class="w-full bg-white text-black font-bold py-3 rounded mt-2 hover:bg-neutral-200 transition">Submit Request</button>
         </form>
@@ -147,10 +174,10 @@
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs rounded-xl p-6">
         <h3 class="text-center font-bold mb-6 text-xl">Admin Access</h3>
         <form onsubmit="window.handleAdminLogin(event)" class="space-y-4">
-            <input type="text" id="adminUser" placeholder="Username" class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none">
-            <input type="password" id="adminPass" placeholder="Password" class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none">
+            <input type="text" id="adminUser" placeholder="Username" class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none font-bold">
+            <input type="password" id="adminPass" placeholder="Password" class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none font-bold">
             <div class="flex gap-2">
-                <button type="button" onclick="window.closeLoginModal()" class="flex-1 bg-neutral-800 py-2 rounded text-sm text-neutral-400">Cancel</button>
+                <button type="button" onclick="window.closeLoginModal()" class="flex-1 bg-neutral-800 py-2 rounded text-sm text-neutral-400 font-bold">Cancel</button>
                 <button type="submit" class="flex-1 bg-white text-black font-bold py-2 rounded text-sm">Login</button>
             </div>
         </form>
@@ -170,9 +197,9 @@
 <div id="inputModal" class="modal fixed inset-0 z-[90] flex items-center justify-center bg-black/90 p-4">
     <div class="bg-neutral-900 border border-neutral-700 w-full max-w-xs rounded-xl p-6">
         <h3 id="inputModalTitle" class="text-lg font-bold mb-4">Edit Value</h3>
-        <input type="text" id="inputModalField" class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none mb-4" autocomplete="off">
+        <input type="text" id="inputModalField" class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none mb-4 font-bold" autocomplete="off">
         <div class="flex gap-2">
-            <button onclick="window.closeInputModal()" class="flex-1 bg-neutral-800 py-2 rounded text-sm text-neutral-400">Cancel</button>
+            <button onclick="window.closeInputModal()" class="flex-1 bg-neutral-800 py-2 rounded text-sm text-neutral-400 font-bold">Cancel</button>
             <button id="inputModalConfirm" class="flex-1 bg-white text-black font-bold py-2 rounded text-sm">Save</button>
         </div>
     </div>
@@ -181,7 +208,7 @@
 <!-- Custom Message Modal (Replaces Alert) -->
 <div id="msgModal" class="modal fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-6">
     <div class="bg-neutral-900 border border-neutral-700 rounded-lg p-5 max-w-xs w-full text-center shadow-2xl">
-        <p id="msgModalText" class="text-sm font-medium mb-4">Message</p>
+        <p id="msgModalText" class="text-sm font-bold mb-4">Message</p>
         <button onclick="document.getElementById('msgModal').classList.remove('active')" class="bg-white text-black px-6 py-2 rounded text-sm font-bold w-full">OK</button>
     </div>
 </div>
@@ -332,7 +359,7 @@
                 <div class="p-4 flex justify-between items-center">
                     <div>
                         <span class="text-xs text-neutral-400 block">Price per night</span>
-                        <span class="text-white font-bold text-lg">NPR ${room.price}</span>
+                        <span class="text-yellow-400 font-bold text-lg">NPR ${room.price}</span>
                     </div>
                     <span class="text-xs border px-2 py-1 rounded font-bold uppercase tracking-wide ${statusClass}">${room.status}</span>
                 </div>
