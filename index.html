@@ -12,17 +12,17 @@
         ::-webkit-scrollbar-track { background: #000; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
         
-        /* Enforce Monospace and Bold globally */
+        /* Enforce Monospace and Bold globally, increased base size */
         body { 
             background-color: #000; 
             color: #fff; 
             font-family: 'Courier New', Courier, monospace; 
             font-weight: bold; 
+            font-size: 16px; /* Increased base font size */
             -webkit-font-smoothing: antialiased; 
         }
 
         .glass-panel { background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .chip { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); }
         .app-container { max-width: 600px; margin: 0 auto; min-height: 100vh; background-color: #050505; position: relative; }
         .modal { transition: 0.2s ease; opacity: 0; pointer-events: none; transform: scale(0.95); }
         .modal.active { opacity: 1; pointer-events: auto; transform: scale(1); }
@@ -30,10 +30,14 @@
         .status-booked { color: #f87171; border-color: #f87171; background: rgba(248, 113, 113, 0.1); }
         .dropdown-menu { animation: fadeIn 0.1s ease-out; }
         
-        /* Golden Glow Effect */
-        .gold-glow {
-            color: #FFD700;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.3);
+        /* Looping Golden Glow Animation */
+        @keyframes goldenPulse {
+            0% { text-shadow: 0 0 10px #FFD700, 0 0 20px rgba(255, 215, 0, 0.5); color: #FFD700; }
+            50% { text-shadow: 0 0 25px #FFA500, 0 0 40px rgba(255, 165, 0, 0.8); color: #FFF8DC; }
+            100% { text-shadow: 0 0 10px #FFD700, 0 0 20px rgba(255, 215, 0, 0.5); color: #FFD700; }
+        }
+        .gold-glow-loop {
+            animation: goldenPulse 2.5s infinite ease-in-out;
         }
 
         /* Global Micro-Animations */
@@ -42,6 +46,11 @@
         }
         button:active, a:active, .group:active {
             transform: scale(0.96);
+        }
+        
+        /* Chip specific animation */
+        .chip:active {
+            transform: scale(0.90) !important;
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -54,26 +63,27 @@
     <header class="sticky top-0 z-40 glass-panel p-4 flex justify-between items-center border-b border-neutral-800">
         <div class="flex items-center gap-3">
             <div class="relative group">
-                <img id="appLogo" src="https://placehold.co/100x100/333/FFF?text=KG" alt="Logo" class="w-10 h-10 rounded-full border border-neutral-700 bg-neutral-800 object-cover">
+                <img id="appLogo" src="https://placehold.co/100x100/333/FFF?text=KG" alt="Logo" class="w-12 h-12 rounded-full border border-neutral-700 bg-neutral-800 object-cover">
                 <button id="logoEditBtn" onclick="window.adminEditLogo()" class="hidden absolute -bottom-2 -right-2 bg-white text-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center border border-neutral-500 hover:scale-110 transition">
                     <i class="fas fa-pencil-alt"></i>
                 </button>
             </div>
             <div>
-                <h1 class="text-xl font-bold tracking-tight gold-glow">Khudi Guest House</h1>
-                <p class="text-xs text-neutral-400">Khudi Okhara, Nepal</p>
+                <!-- Much Larger Heading with Loop Animation -->
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight gold-glow-loop leading-tight">Khudi Guest House</h1>
+                <p class="text-sm text-neutral-400 font-bold">Khudi Okhara, Nepal</p>
             </div>
         </div>
         
         <div class="flex items-center gap-3">
             <!-- Admin Inbox -->
-            <button id="headerInboxBtn" onclick="window.openAdminInbox()" class="hidden relative w-8 h-8 flex items-center justify-center bg-neutral-800 rounded-full text-white hover:bg-neutral-700 transition">
-                <i class="fas fa-envelope"></i>
-                <span id="headerUnreadCount" class="absolute -top-1 -right-1 bg-red-600 text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold hidden">0</span>
+            <button id="headerInboxBtn" onclick="window.openAdminInbox()" class="hidden relative w-10 h-10 flex items-center justify-center bg-neutral-800 rounded-full text-white hover:bg-neutral-700 transition">
+                <i class="fas fa-envelope text-lg"></i>
+                <span id="headerUnreadCount" class="absolute -top-1 -right-1 bg-red-600 text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold hidden">0</span>
             </button>
 
             <!-- Admin Toggle -->
-            <button id="adminToggleBtn" onclick="window.toggleAdminLogin()" class="text-xs border border-white/20 px-3 py-1 rounded-full hover:bg-white hover:text-black transition">
+            <button id="adminToggleBtn" onclick="window.toggleAdminLogin()" class="text-xs border border-white/20 px-4 py-2 rounded-full hover:bg-white hover:text-black transition uppercase tracking-wider">
                 Admin
             </button>
         </div>
@@ -81,13 +91,24 @@
 
     <!-- Main Content -->
     <main class="flex-1 p-4 overflow-y-auto pb-20">
-        <div class="flex flex-wrap gap-2 mb-6">
-            <span class="chip px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 cursor-default hover:bg-neutral-800"><i class="fas fa-bath text-neutral-400"></i> Attached Bathroom</span>
-            <span class="chip px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 cursor-default hover:bg-neutral-800"><i class="fas fa-wifi text-neutral-400"></i> Free WiFi</span>
-            <span class="chip px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 cursor-default hover:bg-neutral-800"><i class="fas fa-wind text-neutral-400"></i> Ventilated</span>
+        <!-- Colorful Chips with Animation -->
+        <div class="flex flex-wrap gap-3 mb-8">
+            <span class="chip px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-blue-900/40 text-blue-300 border border-blue-500/30 cursor-pointer select-none">
+                <i class="fas fa-bath"></i> Attached Bath
+            </span>
+            <span class="chip px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-violet-900/40 text-violet-300 border border-violet-500/30 cursor-pointer select-none">
+                <i class="fas fa-wifi"></i> Free WiFi
+            </span>
+            <span class="chip px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 cursor-pointer select-none">
+                <i class="fas fa-wind"></i> Ventilated
+            </span>
+            <span class="chip px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 bg-orange-900/40 text-orange-300 border border-orange-500/30 cursor-pointer select-none">
+                <i class="fas fa-couch"></i> Furnished
+            </span>
         </div>
-        <div id="roomList" class="space-y-4">
-            <div class="text-center text-neutral-500 py-10">Loading Rooms...</div>
+        
+        <div id="roomList" class="space-y-6">
+            <div class="text-center text-neutral-500 py-10 text-lg">Loading Rooms...</div>
         </div>
     </main>
 </div>
@@ -96,11 +117,11 @@
 <div id="detailModal" class="modal fixed inset-0 z-50 flex flex-col bg-black text-white app-container mx-auto">
     <div class="p-4 flex justify-between items-center glass-panel z-10 border-b border-neutral-800">
         <!-- Blue, easily seen Back Button -->
-        <button onclick="window.closeDetailModal()" class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.6)] border border-blue-400 transform hover:scale-105 active:scale-95 transition-all">
-            <i class="fas fa-arrow-left"></i>
+        <button onclick="window.closeDetailModal()" class="w-12 h-12 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.6)] border border-blue-400 transform hover:scale-105 active:scale-95 transition-all">
+            <i class="fas fa-arrow-left text-xl"></i>
         </button>
-        <span class="font-bold text-lg" id="detailTitle">Room Name</span>
-        <div class="w-10"></div>
+        <span class="font-bold text-xl" id="detailTitle">Room Name</span>
+        <div class="w-12"></div>
     </div>
     <div class="flex-1 overflow-y-auto pb-10">
         <!-- Main Image Container: Aspect Square -->
@@ -108,29 +129,29 @@
             <img id="detailMainImage" src="" class="w-full h-full object-cover">
         </div>
         
-        <div class="p-5 space-y-4">
+        <div class="p-6 space-y-5">
             <div class="flex justify-between items-start">
                 <div>
-                    <h2 class="text-2xl font-bold mb-1" id="detailName">Room 1</h2>
-                    <div class="flex flex-wrap gap-2 mt-2" id="detailTags"></div>
+                    <h2 class="text-4xl font-extrabold mb-1" id="detailName">Room 1</h2>
+                    <div class="flex flex-wrap gap-2 mt-3" id="detailTags"></div>
                 </div>
                 <div class="text-right">
-                    <div class="text-xl font-bold text-yellow-400">NPR <span id="detailPrice">0</span></div>
-                    <span id="detailStatus" class="text-xs border px-2 py-0.5 rounded uppercase font-bold tracking-wider">Open</span>
+                    <div class="text-2xl font-bold text-yellow-400">NPR <span id="detailPrice">0</span></div>
+                    <span id="detailStatus" class="text-sm border px-3 py-1 rounded uppercase font-bold tracking-wider mt-1 inline-block">Open</span>
                 </div>
             </div>
             <div class="h-px bg-neutral-800 my-4"></div>
             
             <!-- Description -->
-            <p class="text-neutral-300 text-sm leading-relaxed" id="detailDesc"></p>
+            <p class="text-neutral-300 text-base leading-relaxed font-medium" id="detailDesc"></p>
 
             <!-- Actions -->
-            <div class="grid grid-cols-1 gap-3 mt-6 pt-4 border-t border-neutral-800">
-                <button onclick="window.openBookingForm()" id="applyBtn" class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-neutral-200 transition flex items-center justify-center gap-2">
+            <div class="grid grid-cols-1 gap-4 mt-8 pt-4 border-t border-neutral-800">
+                <button onclick="window.openBookingForm()" id="applyBtn" class="w-full bg-white text-black font-extrabold py-4 rounded-xl hover:bg-neutral-200 transition flex items-center justify-center gap-3 text-lg">
                     <i class="fas fa-paper-plane"></i> Apply to Book
                 </button>
                 <!-- Call Button -->
-                <a href="tel:9846027958" class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-neutral-200 transition flex items-center justify-center gap-2 decoration-0">
+                <a href="tel:9846027958" class="w-full bg-white text-black font-extrabold py-4 rounded-xl hover:bg-neutral-200 transition flex items-center justify-center gap-3 decoration-0 text-lg">
                     <i class="fas fa-phone"></i> Call: 984-6027958
                 </a>
             </div>
@@ -155,16 +176,16 @@
 <div id="bookingModal" class="modal fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4">
     <div class="bg-neutral-900 border border-neutral-700 w-full max-w-sm rounded-xl p-6 shadow-2xl">
         <div class="flex justify-between items-center mb-6">
-            <h3 class="text-lg font-bold">Booking Request</h3>
-            <button onclick="window.closeBookingModal()" class="text-neutral-400 hover:text-white"><i class="fas fa-times"></i></button>
+            <h3 class="text-xl font-bold">Booking Request</h3>
+            <button onclick="window.closeBookingModal()" class="text-neutral-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
         </div>
         <form onsubmit="window.submitBooking(event)" class="space-y-4">
-            <input type="text" id="guestName" placeholder="Full Name" required class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none font-bold">
+            <input type="text" id="guestName" placeholder="Full Name" required class="w-full bg-black border border-neutral-700 rounded-lg p-4 text-base focus:border-white outline-none font-bold">
             <div class="grid grid-cols-2 gap-4">
-                <input type="tel" id="guestPhone" placeholder="Phone" required class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none font-bold">
-                <input type="number" id="guestStay" placeholder="Nights" min="1" value="1" required class="w-full bg-black border border-neutral-700 rounded p-3 text-sm focus:border-white outline-none font-bold">
+                <input type="tel" id="guestPhone" placeholder="Phone" required class="w-full bg-black border border-neutral-700 rounded-lg p-4 text-base focus:border-white outline-none font-bold">
+                <input type="number" id="guestStay" placeholder="Nights" min="1" value="1" required class="w-full bg-black border border-neutral-700 rounded-lg p-4 text-base focus:border-white outline-none font-bold">
             </div>
-            <button type="submit" class="w-full bg-white text-black font-bold py-3 rounded mt-2 hover:bg-neutral-200 transition">Submit Request</button>
+            <button type="submit" class="w-full bg-white text-black font-bold py-4 rounded-lg mt-2 hover:bg-neutral-200 transition text-lg">Submit Request</button>
         </form>
     </div>
 </div>
@@ -187,8 +208,8 @@
 <!-- Admin Inbox Modal -->
 <div id="inboxModal" class="modal fixed inset-0 z-[60] flex flex-col bg-neutral-900 app-container mx-auto">
     <div class="p-4 flex justify-between items-center border-b border-neutral-800 bg-black">
-        <h2 class="font-bold text-lg"><i class="fas fa-inbox mr-2"></i>Booking Requests</h2>
-        <button onclick="window.closeAdminInbox()" class="text-neutral-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+        <h2 class="font-bold text-xl"><i class="fas fa-inbox mr-2"></i>Booking Requests</h2>
+        <button onclick="window.closeAdminInbox()" class="text-neutral-400 hover:text-white"><i class="fas fa-times text-2xl"></i></button>
     </div>
     <div id="inboxList" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
 </div>
@@ -347,21 +368,22 @@
                 `;
             }
 
+            // Larger Fonts here
             card.innerHTML = `
-                <div class="h-40 overflow-hidden relative">
+                <div class="h-44 overflow-hidden relative">
                     <img src="${displayImage}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                    <div class="absolute bottom-3 left-3">
-                        <h3 class="text-lg font-bold">${room.name}</h3>
+                    <div class="absolute bottom-4 left-4">
+                        <h3 class="text-3xl font-extrabold text-white drop-shadow-md">${room.name}</h3>
                     </div>
                     ${adminControls}
                 </div>
-                <div class="p-4 flex justify-between items-center">
+                <div class="p-5 flex justify-between items-center">
                     <div>
-                        <span class="text-xs text-neutral-400 block">Price per night</span>
-                        <span class="text-yellow-400 font-bold text-lg">NPR ${room.price}</span>
+                        <span class="text-sm text-neutral-400 block font-bold">Price per night</span>
+                        <span class="text-yellow-400 font-extrabold text-xl">NPR ${room.price}</span>
                     </div>
-                    <span class="text-xs border px-2 py-1 rounded font-bold uppercase tracking-wide ${statusClass}">${room.status}</span>
+                    <span class="text-sm border px-3 py-1 rounded font-bold uppercase tracking-wide ${statusClass}">${room.status}</span>
                 </div>
             `;
             list.appendChild(card);
