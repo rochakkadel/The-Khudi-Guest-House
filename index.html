@@ -415,7 +415,7 @@
         document.getElementById('detailTitle').innerText = room.name;
         document.getElementById('detailPrice').innerText = room.price;
         document.getElementById('detailMainImage').src = (room.images && room.images.length > 0) ? room.images[0] : '';
-        document.getElementById('detailDesc').innerText = room.description || "No description available.";
+        document.getElementById('detailDesc').innerText = room.description || "";
         
         const statusEl = document.getElementById('detailStatus');
         statusEl.innerText = room.status;
