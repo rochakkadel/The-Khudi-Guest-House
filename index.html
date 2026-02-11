@@ -29,7 +29,12 @@
     <!-- Header -->
     <header class="sticky top-0 z-40 glass-panel p-4 flex justify-between items-center border-b border-neutral-800">
         <div class="flex items-center gap-3">
-            <img src="https://placehold.co/100x100/333/FFF?text=KG" alt="Logo" class="w-10 h-10 rounded-full border border-neutral-700 bg-neutral-800">
+            <div class="relative group">
+                <img id="appLogo" src="https://placehold.co/100x100/333/FFF?text=KG" alt="Logo" class="w-10 h-10 rounded-full border border-neutral-700 bg-neutral-800 object-cover">
+                <button id="logoEditBtn" onclick="window.adminEditLogo()" class="hidden absolute -bottom-2 -right-2 bg-white text-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center border border-neutral-500 hover:scale-110 transition">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+            </div>
             <div>
                 <h1 class="text-xl font-bold tracking-tight">Khudi Guest House</h1>
                 <p class="text-xs text-neutral-400">Khudi Okhara, Nepal</p>
@@ -71,9 +76,11 @@
         <div class="w-8"></div>
     </div>
     <div class="flex-1 overflow-y-auto pb-10">
-        <div class="h-64 bg-neutral-900 relative">
+        <!-- Main Image Container: Changed to aspect-square -->
+        <div class="aspect-square w-full bg-neutral-900 relative">
             <img id="detailMainImage" src="" class="w-full h-full object-cover">
         </div>
+        
         <div class="p-5 space-y-4">
             <div class="flex justify-between items-start">
                 <div>
@@ -90,25 +97,25 @@
             <!-- Description -->
             <p class="text-neutral-300 text-sm leading-relaxed" id="detailDesc"></p>
 
-            <!-- Actions (Moved here) -->
+            <!-- Actions -->
             <div class="grid grid-cols-1 gap-3 mt-6 pt-4 border-t border-neutral-800">
                 <button onclick="window.openBookingForm()" id="applyBtn" class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-neutral-200 transition flex items-center justify-center gap-2">
                     <i class="fas fa-paper-plane"></i> Apply to Book
                 </button>
-                <div class="text-center p-3 rounded-lg border border-neutral-800 bg-neutral-900 flex items-center justify-center gap-3">
-                    <i class="fas fa-phone text-neutral-500"></i>
-                    <span class="text-neutral-400 text-sm">Call us:</span>
-                    <span class="text-lg font-mono font-bold text-white tracking-wider">984-6027958</span>
-                </div>
+                <!-- Updated Call Button -->
+                <a href="tel:9846027958" class="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-neutral-200 transition flex items-center justify-center gap-2 decoration-0">
+                    <i class="fas fa-phone"></i> Call: 984-6027958
+                </a>
             </div>
 
             <!-- Admin Controls (Detail View) -->
             <div id="adminDetailControls" class="hidden mt-6 p-4 border border-dashed border-neutral-700 rounded-lg bg-neutral-900/50">
                 <h3 class="text-xs text-neutral-400 mb-3 uppercase tracking-wider font-bold">Admin Controls</h3>
                 <div class="grid grid-cols-2 gap-3">
+                    <button onclick="window.adminEditImage()" class="bg-neutral-800 py-3 rounded text-sm hover:bg-neutral-700 font-medium border border-neutral-700 text-yellow-400">Edit Image</button>
                     <button onclick="window.adminEditPriceDetail()" class="bg-neutral-800 py-3 rounded text-sm hover:bg-neutral-700 font-medium border border-neutral-700">Edit Price</button>
                     <button onclick="window.adminEditTags()" class="bg-neutral-800 py-3 rounded text-sm hover:bg-neutral-700 font-medium border border-neutral-700">Edit Tags</button>
-                    <button onclick="window.adminEditNotes()" class="bg-neutral-800 py-3 rounded text-sm hover:bg-neutral-700 font-medium col-span-2 border border-neutral-700">Edit Notes</button>
+                    <button onclick="window.adminEditNotes()" class="bg-neutral-800 py-3 rounded text-sm hover:bg-neutral-700 font-medium border border-neutral-700">Edit Notes</button>
                     <button onclick="window.adminSetStatus('Open')" class="bg-green-900/20 text-green-400 border border-green-900/50 py-3 rounded text-sm font-medium">Set Open</button>
                     <button onclick="window.adminSetStatus('Booked')" class="bg-red-900/20 text-red-400 border border-red-900/50 py-3 rounded text-sm font-medium">Set Booked</button>
                 </div>
@@ -183,7 +190,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, doc, setDoc, updateDoc, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, collection, doc, setDoc, updateDoc, onSnapshot, addDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // --- CONFIG ---
     const firebaseConfig = {
@@ -204,7 +211,8 @@
     window.currentRoomId = null; 
     window.isAdmin = false;
     window.roomsData = [];
-    window.pendingCallback = null; // For modal callbacks
+    window.settingsData = { logoUrl: "https://placehold.co/100x100/333/FFF?text=KG" };
+    window.pendingCallback = null;
 
     // --- HELPER UI ---
     window.showToast = (msg) => {
@@ -241,6 +249,7 @@
     }).catch(err => console.error("DB Error", err));
 
     function initListeners() {
+        // Rooms
         onSnapshot(collection(db, 'rooms'), (snapshot) => {
             if (snapshot.empty) seedRooms();
             else {
@@ -256,12 +265,24 @@
             }
         });
 
+        // Bookings
         onSnapshot(collection(db, 'bookings'), (snapshot) => {
             const bookings = [];
             snapshot.forEach(d => bookings.push({ ...d.data(), firestoreId: d.id }));
             bookings.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             window.bookingsData = bookings;
             renderApp(window.roomsData);
+        });
+
+        // Settings (Logo)
+        onSnapshot(doc(db, 'settings', 'general'), (docSnap) => {
+            if(docSnap.exists()) {
+                const data = docSnap.data();
+                if(data.logoUrl) {
+                    window.settingsData.logoUrl = data.logoUrl;
+                    document.getElementById('appLogo').src = data.logoUrl;
+                }
+            }
         });
     }
 
@@ -322,16 +343,19 @@
         const adminBtn = document.getElementById('adminToggleBtn');
         const headerInbox = document.getElementById('headerInboxBtn');
         const headerBadge = document.getElementById('headerUnreadCount');
+        const logoEditBtn = document.getElementById('logoEditBtn');
         
         if (window.isAdmin) {
             adminBtn.innerText = "Logout";
             headerInbox.classList.remove('hidden');
+            logoEditBtn.classList.remove('hidden'); // Show logo edit
             const unread = (window.bookingsData || []).filter(b => !b.read).length;
             headerBadge.innerText = unread;
             unread > 0 ? headerBadge.classList.remove('hidden') : headerBadge.classList.add('hidden');
         } else {
             adminBtn.innerText = "Admin Login";
             headerInbox.classList.add('hidden');
+            logoEditBtn.classList.add('hidden');
         }
     }
 
@@ -471,6 +495,27 @@
         });
     };
 
+    window.adminEditImage = () => {
+        if(!window.currentRoomId) return window.showToast("Error: No room");
+        const r = window.roomsData.find(i => i.id === window.currentRoomId);
+        window.showInput("New Image URL", (r && r.images && r.images[0]) ? r.images[0] : "", (val) => {
+            if(val) updateRoom(window.currentRoomId, { images: [val] });
+        });
+    };
+
+    window.adminEditLogo = () => {
+        window.showInput("New Logo URL", window.settingsData.logoUrl, async (val) => {
+            if(val) {
+                try {
+                    await setDoc(doc(db, 'settings', 'general'), { logoUrl: val }, { merge: true });
+                } catch(e) {
+                    console.error(e);
+                    window.showToast("Error updating logo");
+                }
+            }
+        });
+    };
+
     // Booking Submit
     window.submitBooking = async (e) => {
         e.preventDefault();
@@ -520,14 +565,8 @@
     async function seedRooms() {
         console.log("Seeding...");
         
-        // --- INSTRUCTIONS FOR IMAGES ---
-        // 1. Upload your images to a GitHub repository (or any public host).
-        // 2. Get the "Raw" link (e.g., click "Raw" on the file in GitHub).
-        // 3. Paste the links into the "images" arrays below, replacing the current unplash links.
-        //    Example: images: ["https://raw.githubusercontent.com/YourUser/YourRepo/main/room1.jpg"]
-
         const defaults = [
-            { id: 1, name: "Room 1", price: 1500, status: "Open", tags: ["Attached Bath", "WiFi"], description: "Double bed, street view, 2nd floor.", images: ["x.jpg"] },
+            { id: 1, name: "Room 1", price: 1500, status: "Open", tags: ["Attached Bath", "WiFi"], description: "Double bed, street view, 2nd floor.", images: ["https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&w=800&q=80"] },
             { id: 2, name: "Room 2", price: 1500, status: "Open", tags: ["Attached Bath", "WiFi", "Balcony"], description: "Clean, ventilated room.", images: ["https://images.unsplash.com/photo-1590490360182-f33efe80a713?ixlib=rb-4.0.3&w=800&q=80"] },
             { id: 3, name: "Room 3", price: 1500, status: "Open", tags: ["Attached Bath", "WiFi"], description: "Quiet room facing garden.", images: ["https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-4.0.3&w=800&q=80"] },
             { id: 4, name: "Room 4", price: 1200, status: "Open", tags: ["Common Bath", "WiFi"], description: "Budget friendly option.", images: ["https://images.unsplash.com/photo-1505693314120-0d443867891c?ixlib=rb-4.0.3&w=800&q=80"] },
